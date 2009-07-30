@@ -19,7 +19,7 @@ end
 
 # config.yml format
 # ---
-# key_size: 1024
+# key_size: 2048
 # random_files: 
 # - ~/Downloads/hoge
 # - ~/Downloads/foo
@@ -29,7 +29,7 @@ end
 # cert_descriptions:
 #   C: JP
 #   ST: .
-#   L: Academe
+#   L: Academe2
 #   O: Osaka University
 #   OU: Cybermedia Center
 #   CN: idp01.auth.cmc.osaka-u.ac.jp
@@ -47,7 +47,7 @@ config = {}
 if !File.exist?(config_file)
   puts "config file #{config_file} is not found! using default values."
   puts "key_type: genrsa"
-  puts "key_size: 1024"
+  puts "key_size: 2048"
   puts "random_files:"
   puts "- /etc/"
   puts "key_file: new_key.pem"
@@ -56,7 +56,7 @@ else
   config = YAML.load_file(config_file)
 end
 config["key_type"] ||= "genrsa"
-config["key_size"] ||= 1024
+config["key_size"] ||= 2048
 config["random_files"] ||= ["/etc/"]
 config["key_file"] ||= "new_key.pem"
 config["csr_file"] ||= "new_csr.pem"
@@ -64,7 +64,7 @@ config["csr_file"] ||= "new_csr.pem"
 config["cert_descriptions"] = {
   "C" => "JP",
   "ST" => ".",
-  "L" => "Academe",
+  "L" => "Academe2",
   "O" => "Sample University",
   "OU" => ".",
   "CN" => "idp.example.org",

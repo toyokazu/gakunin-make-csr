@@ -1,6 +1,6 @@
 ---
 key_type: genrsa
-key_size: 1024
+key_size: 2048
 random_files:
 - /home/downloads
 key_file: certs/server.pem
