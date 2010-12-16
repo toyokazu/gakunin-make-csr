@@ -5,6 +5,7 @@
 require 'yaml'
 require 'find'
 require 'shell'
+require 'fileutils'
 
 # gem libraries
 require 'rubygems'
@@ -19,13 +20,15 @@ end
 
 # config.yml format
 # ---
+# key_type: rsa
 # key_size: 2048
 # random_files: 
 # - ~/Downloads/hoge
 # - ~/Downloads/foo
 # - ~/Downloads/bar
 # key_file: ./new_key.pem
-# csr_file: ./new_csr.pem
+# req_file: ./new_req.pem
+# req_type: csr
 # cert_descriptions:
 #   C: JP
 #   ST: .
@@ -46,20 +49,21 @@ end
 config = {}
 if !File.exist?(config_file)
   puts "config file #{config_file} is not found! using default values."
-  puts "key_type: genrsa"
+  puts "key_type: rsa"
   puts "key_size: 2048"
   puts "random_files:"
   puts "- /etc/"
   puts "key_file: new_key.pem"
-  puts "csr_files: new_csr.pem"
+  puts "req_file: new_req.pem"
+  puts "req_type: csr"
 else
   config = YAML.load_file(config_file)
 end
-config["key_type"] ||= "genrsa"
+config["key_type"] ||= "rsa"
 config["key_size"] ||= 2048
 config["random_files"] ||= ["/etc/"]
 config["key_file"] ||= "new_key.pem"
-config["csr_file"] ||= "new_csr.pem"
+config["req_file"] ||= "new_req.pem"
 # certificate description defaults
 config["cert_descriptions"] = {
   "C" => "JP",
@@ -107,18 +111,46 @@ while password.nil?
   end
 end
 
+null_password = false
+if password.empty?
+  null_password = true
+  password = "1234ABCD"
+end
+
 sh.out(STDOUT) do
-  system("openssl",
-         config["key_type"],
-         "-des3", 
-         "-rand", selected_files.join(File::PATH_SEPARATOR),
-         "-passout", "pass:#{password}",
-         "-out", config["key_file"],
-         config["key_size"].to_s)
+  args = [
+    "openssl",
+    "gen#{config["key_type"]}",
+    "-des3", 
+    "-rand", selected_files.join(File::PATH_SEPARATOR),
+    "-out", config["key_file"],
+    "-passout", "pass:#{password}",
+    config["key_size"].to_s
+  ]
+  system(*args)
+end
+
+if null_password
+  sh.out(STDOUT) do
+    args = [
+      "openssl",
+      config["key_type"],
+      "-in", config["key_file"],
+      "-passin", "pass:#{password}",
+      "-out", "tmp_#{config["key_file"]}"
+    ]
+    system(*args)
+  end
+  FileUtils.mv("tmp_#{config["key_file"]}", config["key_file"])
 end
 
 # === create new csr
-puts "creating new csr #{config["csr_file"]}"
+case config["req_type"]
+when "csr"
+  puts "creating new csr #{config["req_file"]}"
+when "x509"
+  puts "creating new self-signed certificate #{config["req_file"]}"
+end
 
 subject = ""
 
@@ -133,11 +165,20 @@ dn_keys.each do |key|
 end
 
 sh.out(STDOUT) do
-  system("openssl",
-         "req",
-         "-new",
-         "-subj", subject,
-         "-key", config["key_file"],
-         "-out", config["csr_file"],
-         "-passin", "pass:#{password}")
+  args = [
+    "openssl",
+    "req",
+    "-new",
+    "-subj", subject,
+    "-key", config["key_file"],
+    "-out", config["req_file"]
+  ]
+  if !null_password
+    args << "-passin"
+    args << "pass:#{password}"
+  end
+  if config["req_type"] == "x509"
+    args << "-x509"
+  end
+  system(*args)
 end

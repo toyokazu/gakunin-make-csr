@@ -1,10 +1,12 @@
 ---
-key_type: genrsa
+key_type: rsa
 key_size: 2048
 random_files:
 - /home/downloads
 key_file: certs/server.pem
-csr_file: certs/csr_server.pem
+req_file: certs/req_server.pem
+# for outputing self-signed certificate
+#req_type: x509
 cert_descriptions:
   O: Osaka University
   OU: Cybermedia Center
