@@ -11,3 +11,5 @@ cert_descriptions:
   O: Osaka University
   OU: Cybermedia Center
   CN: server.osaka-u.ac.jp
+# for debug messages (!!UNSECURE!! password will be displayed)
+#debug: true
