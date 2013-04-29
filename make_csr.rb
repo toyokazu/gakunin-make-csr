@@ -6,6 +6,7 @@ require 'yaml'
 require 'find'
 require 'shell'
 require 'fileutils'
+require 'pathname'
 
 # gem libraries
 require 'rubygems'
@@ -143,18 +144,22 @@ sh_exec do
 end
 
 if null_password
+  pathname = Pathname.new($config["key_file"])
+  tmp_filename = "#{pathname.dirname}/tmp_#{pathname.basename}"
   sh_exec do
     args = [
       "openssl",
       $config["key_type"],
       "-in", $config["key_file"],
       "-passin", "pass:#{$password}",
-      "-out", "tmp_#{$config["key_file"]}"
+      "-out", tmp_filename
     ]
     system(*args)
   end
-  FileUtils.mv("tmp_#{$config["key_file"]}", $config["key_file"])
+  FileUtils.mv(tmp_filename, $config["key_file"])
 end
+
+FileUtils.chmod("go-rwx", $config["key_file"])
 
 # === create new csr
 case $config["req_type"]
