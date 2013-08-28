@@ -201,5 +201,9 @@ sh_exec do
       args << $config["req_days"].to_s
     end
   end
+  if !$config["openssl_conf"].nil?
+    args << "-config"
+    args << $config["openssl_conf"].to_s
+  end
   system(*args)
 end
