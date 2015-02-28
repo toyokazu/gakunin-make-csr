@@ -8,6 +8,9 @@ req_file: certs/req_server.pem
 # for outputing self-signed certificate
 #req_type: x509
 #openssl_conf: openssl.cnf
+#openssl_extensions: v3_ca
+#openssl_extensions: server
+#openssl_extensions: objsign
 cert_descriptions:
   O: Osaka University
   OU: Cybermedia Center

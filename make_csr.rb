@@ -204,6 +204,10 @@ sh_exec do
   if !$config["openssl_conf"].nil?
     args << "-config"
     args << $config["openssl_conf"].to_s
+    if !$config["openssl_extensions"].nil?
+      args << "-extensions"
+      args << $config["openssl_extensions"].to_s
+    end
   end
   system(*args)
 end
