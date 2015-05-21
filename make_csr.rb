@@ -54,6 +54,7 @@ if !File.exist?(config_file)
   puts "config file #{config_file} is not found! using default values."
   puts "key_type: rsa"
   puts "key_size: 2048"
+  puts "digest: sha256"
   puts "random_files:"
   puts "- /etc/"
   puts "key_file: new_key.pem"
@@ -64,6 +65,7 @@ else
 end
 $config["key_type"] ||= "rsa"
 $config["key_size"] ||= 2048
+$config["digest"] ||= "sha256"
 $config["random_files"] ||= ["/etc/"]
 $config["key_file"] ||= "new_key.pem"
 $config["req_file"] ||= "new_req.pem"
@@ -187,6 +189,7 @@ sh_exec do
     "req",
     "-new",
     "-subj", $subject,
+    "-#{$config["digest"]}",
     "-key", $config["key_file"],
     "-out", $config["req_file"]
   ]
