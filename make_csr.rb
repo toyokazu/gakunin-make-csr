@@ -29,6 +29,7 @@ end
 # - ~/Downloads/bar
 # key_file: ./new_key.pem
 # req_file: ./new_req.pem
+# p12_file: ./new_p12.p12 (only for x509)
 # req_type: csr | x509
 # req_days: 30 (only for x509)
 # cert_descriptions:
@@ -81,6 +82,32 @@ $config["cert_descriptions"] = {
   "emailAddress" => "."
 }.merge($config["cert_descriptions"])
 
+
+# === get_password method
+#
+def get_password
+  password = nil
+  while password.nil?
+    password = prompt("Password:", false)
+    check_password = prompt("Retype Password:", false)
+    if password != check_password
+      password = nil
+    end
+  end
+  password
+end
+
+def null_password?(pass)
+  null_password = false
+  password = pass
+  if pass.empty?
+    null_password = true
+    password = "1234ABCD"
+  end
+  [password, null_password]
+end
+
+
 # === obtain random_files
 # If the specified file is a directory, obtain files from
 # the directory and add to the random_files. Finally,
@@ -117,20 +144,8 @@ end
 # === create new rsa key
 puts "creating new key #{$config["key_file"]}"
 
-$password = nil
-while $password.nil?
-  $password = prompt("Password:", false)
-  check_password = prompt("Retype Password:", false)
-  if $password != check_password
-    $password = nil
-  end
-end
-
-null_password = false
-if $password.empty?
-  null_password = true
-  $password = "1234ABCD"
-end
+$password = get_password
+$password, $null_password = null_password?($password)
 
 sh_exec do
   args = [
@@ -145,7 +160,7 @@ sh_exec do
   system(*args)
 end
 
-if null_password
+if $null_password
   pathname = Pathname.new($config["key_file"])
   tmp_filename = "#{pathname.dirname}/tmp_#{pathname.basename}"
   sh_exec do
@@ -193,7 +208,7 @@ sh_exec do
     "-key", $config["key_file"],
     "-out", $config["req_file"]
   ]
-  if !null_password
+  if !$null_password
     args << "-passin"
     args << "pass:#{$password}"
   end
@@ -213,4 +228,27 @@ sh_exec do
     end
   end
   system(*args)
+end
+
+# === create p12 file
+if $config["req_type"] == "x509" && $config["p12_file"]
+  puts "creating new PKCS#12 file #{$config["p12_file"]}"
+  $p12_pass = get_password
+
+  sh_exec do
+    args = [
+      "openssl",
+      "pkcs12",
+      "-export",
+      "-in", $config["req_file"],
+      "-inkey", $config["key_file"],
+      "-passout", "pass:#{$p12_pass}",
+      "-out", $config["p12_file"]
+    ]
+    if !$null_password
+      args << "-passin"
+      args << "pass:#{$password}"
+    end
+    system(*args)
+  end
 end
