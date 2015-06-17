@@ -5,8 +5,10 @@ random_files:
 - /home/downloads
 key_file: certs/server.pem
 req_file: certs/req_server.pem
+#p12_file: certs/server.p12
 # for outputing self-signed certificate
 #req_type: x509
+#req_days: 30
 #openssl_conf: openssl.cnf
 #openssl_extensions: v3_ca
 #openssl_extensions: server
