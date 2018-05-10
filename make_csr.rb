@@ -11,7 +11,6 @@ require 'pathname'
 # gem libraries
 require 'rubygems'
 require 'net/ssh/prompt'
-include Net::SSH::Prompt
 
 if (ARGV[0] == '-h' || ARGV[0] == '--help')
   puts "usage: make_csr.rb [config_file]"
@@ -87,9 +86,10 @@ $config["cert_descriptions"] = {
 #
 def get_password
   password = nil
+  prompter = Net::SSH::Prompt.new.start({type:'password'})
   while password.nil?
-    password = prompt("Password:", false)
-    check_password = prompt("Retype Password:", false)
+    password = prompter.ask("Password:", false)
+    check_password = prompter.ask("Retype Password:", false)
     if password != check_password
       password = nil
     end
